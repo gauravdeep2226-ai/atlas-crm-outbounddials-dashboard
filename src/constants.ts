@@ -31,6 +31,24 @@ export const STATUS_COLOR: Record<string, string> = {
 export const DEAD_STATUSES = new Set(['Dead']);
 
 // ---------------------------------------------------------------------------
+// Calendar timezone. Demo dates are stored as absolute UTC instants but the
+// picker/chip operate in the prospect's local timezone. The current market is
+// all Newfoundland (NDT/NST), so the default is St. John's. As we expand into
+// new cities, add city → IANA-zone entries here (e.g. 'Halifax':
+// 'America/Halifax') and the demo calendar follows automatically.
+// ---------------------------------------------------------------------------
+export const DEFAULT_TIMEZONE = 'America/St_Johns';
+
+export const CITY_TIMEZONE: Record<string, string> = {
+  // 'Halifax': 'America/Halifax',
+  // 'Toronto': 'America/Toronto',
+};
+
+export function timezoneForCity(city: string): string {
+  return CITY_TIMEZONE[city] ?? DEFAULT_TIMEZONE;
+}
+
+// ---------------------------------------------------------------------------
 // Vertical badge tints — muted, low-chroma tones drawn from the Atlas
 // teal→gold→maroon spectrum. They stay quiet (category tags) so the bright
 // reserved accents (orange/gold/maroon) keep their meaning. Unknown verticals

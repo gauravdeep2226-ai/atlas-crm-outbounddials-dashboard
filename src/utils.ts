@@ -64,45 +64,93 @@ function daysBetween(a: string, b: string): number {
   return Math.round(ms / 86400000);
 }
 
-/** Value for an <input type="datetime-local">. Date-only stamps default to 9am.
- *  A full ISO instant (the backend serializes datetimes to UTC with a Z) is
- *  converted to local wall-clock so the picker matches the row chip. A naive
- *  "yyyy-mm-ddThh:mm" (our own optimistic write) is used as-is. */
-export function toDateTimeLocal(s: string | null | undefined): string {
-  if (!s) return '';
-  const str = String(s).trim();
-  if (!str) return '';
+// ---------------------------------------------------------------------------
+// Timezone-aware demo-date helpers. Demo dates are stored as absolute UTC
+// instants (the backend round-trips an ISO ...Z faithfully), but the picker and
+// chip operate in the prospect's local timezone (NDT for St. John's) so the
+// time the user picks is the time they see — regardless of the device's clock.
+// ---------------------------------------------------------------------------
 
-  const hasZone = /[zZ]|[+-]\d\d:?\d\d$/.test(str);
+const hasZoneInfo = (s: string) => /[zZ]|[+-]\d\d:?\d\d$/.test(s);
 
-  // Already a naive local datetime ("yyyy-mm-ddThh:mm[...]", no zone) — our own
-  // optimistic writes look like this. Use the wall-clock as-is, trimmed to minutes.
-  const naive = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(str);
-  if (naive && !hasZone) return `${naive[1]}T${naive[2]}`;
-
-  // Date-only — default the time to 9am local.
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return `${str}T09:00`;
-
-  // Anything else (ISO with Z/offset, space-separated, a Date.toString()) —
-  // parse the instant and render it in the browser's local time so the picker
-  // matches the displayed chip. Only a truly unparseable value yields ''.
-  const d = new Date(str);
-  if (!Number.isNaN(d.getTime())) {
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  }
-  return '';
+/** Offset (zone wall-clock minus UTC) in ms at a given instant, e.g. NDT = -2.5h. */
+function zoneOffsetMs(utcMs: number, timeZone: string): number {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const m: Record<string, string> = {};
+  for (const p of dtf.formatToParts(new Date(utcMs))) m[p.type] = p.value;
+  const asUTC = Date.UTC(+m.year, +m.month - 1, +m.day, +m.hour, +m.minute, +m.second);
+  return asUTC - utcMs;
 }
 
-/** Friendly date (+ time if the stored value carries one): "Jul 2" / "Jul 2, 2:30 PM". */
-export function formatDateTime(s: string): string {
-  if (!s) return '';
-  const hasTime = s.includes('T');
-  const d = new Date(hasTime ? s : s.slice(0, 10) + 'T00:00:00');
-  if (Number.isNaN(d.getTime())) return s;
-  return d.toLocaleString([], {
+/** Parts (year…minute) of an instant rendered in a timezone. */
+function zonedParts(d: Date, timeZone: string): Record<string, string> {
+  const dtf = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const m: Record<string, string> = {};
+  for (const p of dtf.formatToParts(d)) m[p.type] = p.value;
+  return m;
+}
+
+/** Stored value → "yyyy-mm-ddThh:mm" wall-clock in `timeZone` (for the picker). */
+export function zonedToDateTimeLocal(value: string | null | undefined, timeZone: string): string {
+  if (!value) return '';
+  const str = String(value).trim();
+  if (!str) return '';
+
+  // No zone info: treat the wall-clock as already in the target zone.
+  if (!hasZoneInfo(str)) {
+    const naive = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(str);
+    if (naive) return `${naive[1]}T${naive[2]}`;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return `${str}T09:00`;
+    return '';
+  }
+  // Absolute instant → render as wall-clock in the zone.
+  const d = new Date(str);
+  if (Number.isNaN(d.getTime())) return '';
+  const p = zonedParts(d, timeZone);
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+
+/** "yyyy-mm-ddThh:mm" picked in `timeZone` → absolute UTC ISO instant (for writes). */
+export function dateTimeLocalToISO(wallClock: string, timeZone: string): string {
+  if (!wallClock) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(wallClock);
+  if (!m) return '';
+  const [, y, mo, d, h, mi] = m.map(Number);
+  const asUTC = Date.UTC(y, mo - 1, d, h, mi); // wall-clock treated as if UTC
+  const offset = zoneOffsetMs(asUTC, timeZone); // correct by the zone's offset
+  return new Date(asUTC - offset).toISOString();
+}
+
+/** Friendly chip label in `timeZone`: "Jun 29, 1:00 PM". */
+export function formatZonedDateTime(value: string | null | undefined, timeZone: string): string {
+  if (!value) return '';
+  const str = String(value).trim();
+  if (!str) return '';
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(str);
+  const d = new Date(hasZoneInfo(str) ? str : dateOnly ? `${str}T00:00:00` : str);
+  if (Number.isNaN(d.getTime())) return str;
+  return d.toLocaleString('en-CA', {
+    timeZone,
     month: 'short',
     day: 'numeric',
-    ...(hasTime ? { hour: 'numeric', minute: '2-digit' } : {}),
+    ...(dateOnly ? {} : { hour: 'numeric', minute: '2-digit' }),
   });
 }
 

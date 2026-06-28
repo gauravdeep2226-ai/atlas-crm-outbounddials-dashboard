@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Prospect, SaveState, Writable } from '../types';
-import { DEAD_STATUSES, STATUS_COLOR, STATUS_OPTIONS } from '../constants';
-import { dueLabel, formatDateTime, formatPhone, isOverdue, isDueOrOverdue, num, telHref, toDateTimeLocal } from '../utils';
+import { DEAD_STATUSES, STATUS_COLOR, STATUS_OPTIONS, timezoneForCity } from '../constants';
+import {
+  dateTimeLocalToISO,
+  dueLabel,
+  formatPhone,
+  formatZonedDateTime,
+  isOverdue,
+  isDueOrOverdue,
+  num,
+  telHref,
+  zonedToDateTimeLocal,
+} from '../utils';
 import { FlagBadge, PriorityBadge, VerticalBadge } from './Badges';
 
 function PersonIcon() {
@@ -50,6 +60,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
 
   const dead = DEAD_STATUSES.has(p.status);
   const isDemo = p.status === 'Demo booked';
+  const demoTz = timezoneForCity(p.city); // demo calendar runs in the prospect's timezone
   const due = isDueOrOverdue(p.next_date);
   const overdue = isOverdue(p.next_date);
   const rating = num(p.rating);
@@ -82,10 +93,13 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
     if (v !== p.next_date) onSave(p.place_id, { next_date: v });
   };
 
-  // Demo bookings write to the dedicated demo_date column (not next_date).
-  const changeDemoDate = (v: string) => {
-    setDemoDate(v);
-    if (v !== p.demo_date) onSave(p.place_id, { demo_date: v });
+  // Demo bookings write to the dedicated demo_date column (not next_date). The
+  // picker hands us an NDT wall-clock; store it as an absolute UTC instant so it
+  // can't be reinterpreted by the sheet's timezone.
+  const changeDemoDate = (wallClock: string) => {
+    const iso = dateTimeLocalToISO(wallClock, demoTz);
+    setDemoDate(iso);
+    if (iso !== p.demo_date) onSave(p.place_id, { demo_date: iso });
   };
 
   return (
@@ -114,7 +128,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
             )}
             {p.city && <span className="meta muted">{p.city}</span>}
             {isDemo && p.demo_date ? (
-              <span className="meta demo-chip">📅 Demo · {formatDateTime(p.demo_date)}</span>
+              <span className="meta demo-chip">📅 Demo · {formatZonedDateTime(p.demo_date, demoTz)}</span>
             ) : p.next_date ? (
               <span className={'meta due' + (overdue ? ' due-over' : '')}>↻ {dueLabel(p.next_date)}</span>
             ) : null}
@@ -176,7 +190,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
               <input
                 className="input"
                 type="datetime-local"
-                value={toDateTimeLocal(demoDate)}
+                value={zonedToDateTimeLocal(demoDate, demoTz)}
                 onChange={(e) => changeDemoDate(e.target.value)}
               />
             </label>
