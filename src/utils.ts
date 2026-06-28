@@ -64,6 +64,38 @@ function daysBetween(a: string, b: string): number {
   return Math.round(ms / 86400000);
 }
 
+/** Value for an <input type="datetime-local">. Date-only stamps default to 9am.
+ *  A full ISO instant (the backend serializes datetimes to UTC with a Z) is
+ *  converted to local wall-clock so the picker matches the row chip. A naive
+ *  "yyyy-mm-ddThh:mm" (our own optimistic write) is used as-is. */
+export function toDateTimeLocal(s: string): string {
+  if (!s) return '';
+  if (s.includes('T')) {
+    const hasZone = /[zZ]$|[+-]\d\d:?\d\d$/.test(s);
+    if (hasZone) {
+      const d = new Date(s);
+      if (!Number.isNaN(d.getTime())) {
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      }
+    }
+    return s.slice(0, 16);
+  }
+  return s.slice(0, 10) + 'T09:00';
+}
+
+/** Friendly date (+ time if the stored value carries one): "Jul 2" / "Jul 2, 2:30 PM". */
+export function formatDateTime(s: string): string {
+  if (!s) return '';
+  const hasTime = s.includes('T');
+  const d = new Date(hasTime ? s : s.slice(0, 10) + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    ...(hasTime ? { hour: 'numeric', minute: '2-digit' } : {}),
+  });
+}
+
 const PRIORITY_RANK: Record<string, number> = { A: 0, B: 1, C: 2 };
 
 /** Default sort: priority A→C, then score desc, then review_count desc. */

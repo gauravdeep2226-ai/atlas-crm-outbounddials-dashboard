@@ -2,27 +2,33 @@
    Atlas HQ — Call Engine. Dark tool UI. Mobile-first. Tabular nums.
    =========================================================================== */
 :root {
-  --bg: #0d1014;
-  --surface: #161b22;
-  --surface-2: #1d242e;
-  --surface-3: #232b36;
-  --border: #2a323d;
-  --border-strong: #3a4452;
-  --text: #e7ebf1;
-  --dim: #9aa6b4;
-  --faint: #6c7785;
+  /* The Atlas HQ "after-hours dispatch" palette — deep teal ground, strictly
+     scoped accents: orange = ACTIONS, gold = EMPHASIS, maroon = MISSED/urgent. */
+  --bg: #041920; /* teal — primary background */
+  --bg-deep: #020f13; /* teal-deep — vignette */
+  --surface: #0a2027; /* lifted teal panel (cards) */
+  --surface-2: #0d2730; /* nested panel */
+  --surface-3: #12313a; /* inputs / raised */
+  --border: #1b3138; /* hairline */
+  --border-strong: #28464f; /* stronger hairline */
+  --charcoal: #454a4a;
+  --text: #ffffff;
+  --dim: #8aa0a2; /* slate — secondary text */
+  --faint: #5d7376; /* dim slate */
 
-  --accent: #4f8cff;
-  --accent-ink: #cfe0ff;
-  --green: #3ddc91;
-  --green-ink: #b6f3d6;
-  --red: #ef5a5a;
-  --amber: #f6b748;
+  --accent: #ff6a00; /* ACTIONS — CTAs, dial, money states */
+  --accent-ink: #ffbe93; /* light orange for text on dark */
+  --gold: #fdb813; /* EMPHASIS — connected/scheduled, priority A */
+  --gold-ink: #ffe2a0;
+  --maroon: #8c2b2b; /* MISSED / urgent fills */
+  --maroon-ink: #e08886; /* readable urgent text on dark */
 
-  --radius: 13px;
-  --radius-sm: 9px;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-btn: 12px;
   --tap: 44px;
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
@@ -37,7 +43,12 @@ body,
 }
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  /* faint cinematic vignette so the teal ground reads as depth, not flat fill */
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(255, 106, 0, 0.05), transparent 55%),
+    radial-gradient(140% 120% at 50% 120%, var(--bg-deep), transparent 60%);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   font-size: 15px;
@@ -132,7 +143,7 @@ button {
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: linear-gradient(140deg, var(--accent), #2f6ae0);
+  background: linear-gradient(140deg, var(--accent), #c44e00);
   color: #fff;
   font-weight: 800;
   display: grid;
@@ -203,7 +214,7 @@ button {
   color: #fff;
 }
 .btn-primary:hover {
-  background: #5e97ff;
+  background: #ff7e22;
 }
 .btn-ghost {
   background: transparent;
@@ -323,9 +334,9 @@ button {
   letter-spacing: 0.04em;
 }
 .tag-live {
-  color: var(--green-ink);
-  background: color-mix(in srgb, var(--green) 15%, transparent);
-  border-color: color-mix(in srgb, var(--green) 40%, transparent);
+  color: var(--gold-ink);
+  background: color-mix(in srgb, var(--gold) 15%, transparent);
+  border-color: color-mix(in srgb, var(--gold) 40%, transparent);
 }
 .tag-default {
   color: var(--dim);
@@ -501,11 +512,31 @@ button {
   white-space: nowrap;
 }
 .due {
-  color: var(--amber);
+  color: var(--gold);
   font-weight: 600;
 }
 .due-over {
-  color: var(--red);
+  color: var(--maroon-ink);
+}
+
+/* owner (read-only, near the business name) */
+.owner {
+  color: var(--dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.owner-ico {
+  color: var(--faint);
+  flex: none;
+}
+
+/* demo appointment chip on the collapsed row */
+.demo-chip {
+  color: var(--accent);
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .row-actions {
@@ -522,12 +553,16 @@ button {
   min-height: 36px;
   padding: 0 11px;
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--green) 40%, var(--border));
-  background: color-mix(in srgb, var(--green) 12%, transparent);
-  color: var(--green-ink);
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  color: var(--accent-ink);
   text-decoration: none;
   font-weight: 650;
   white-space: nowrap;
+}
+.call:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
 }
 .call:active {
   transform: translateY(1px);
@@ -574,12 +609,12 @@ button {
   background: var(--surface-3);
 }
 .pill-saved {
-  color: var(--green-ink);
-  background: color-mix(in srgb, var(--green) 18%, transparent);
+  color: var(--gold-ink);
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
 }
 .pill-error {
   color: #fff;
-  background: var(--red);
+  background: var(--maroon);
 }
 
 /* ---- row edit ------------------------------------------------------------- */
@@ -612,13 +647,21 @@ button {
   gap: 10px;
 }
 .due-tag {
-  color: var(--amber);
+  color: var(--gold);
   font-style: normal;
   text-transform: none;
   letter-spacing: 0;
 }
 .last-contact {
   margin-top: -2px;
+}
+
+/* Demo-date field — orange accent label + a hint that it captures date + time */
+.field-label-demo {
+  color: var(--accent-ink);
+}
+.field-demo .input {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-strong));
 }
 
 /* ---- badges --------------------------------------------------------------- */
@@ -647,13 +690,13 @@ button {
   flex: none;
 }
 .prio-a {
-  background: var(--accent);
-  color: #fff;
+  background: var(--gold);
+  color: var(--bg);
 }
 .prio-b {
-  background: color-mix(in srgb, var(--amber) 20%, transparent);
-  color: var(--amber);
-  border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+  background: color-mix(in srgb, var(--gold) 16%, transparent);
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
 }
 .prio-c {
   background: var(--surface-3);
@@ -693,8 +736,8 @@ button {
   margin-bottom: 12px;
 }
 .banner-error {
-  background: color-mix(in srgb, var(--red) 12%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--red) 45%, transparent);
+  background: color-mix(in srgb, var(--maroon) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--maroon) 55%, transparent);
 }
 .banner span {
   flex: 1;

@@ -14,44 +14,49 @@ export const STATUS_OPTIONS = [
 
 export type Status = (typeof STATUS_OPTIONS)[number];
 
-// Semantic color per status. green = progress/win, red = dead, amber = pending.
+// Semantic color per status, mapped to the strictly-scoped Atlas accents:
+//   slate = neutral, gold = connected/scheduled, orange = money state, maroon = dead.
 export const STATUS_COLOR: Record<string, string> = {
   'Not called': 'var(--dim)',
-  'No answer': 'var(--amber)',
-  Voicemail: 'var(--amber)',
-  Reached: 'var(--green)',
-  Callback: 'var(--accent)',
-  'Demo booked': 'var(--green)',
-  Won: 'var(--green)',
-  Dead: 'var(--red)',
+  'No answer': 'var(--dim)',
+  Voicemail: 'var(--dim)',
+  Reached: 'var(--gold)',
+  Callback: 'var(--gold)',
+  'Demo booked': 'var(--accent)',
+  Won: 'var(--accent)',
+  Dead: 'var(--maroon-ink)',
 };
 
 // Statuses that pull a business out of the active queue.
 export const DEAD_STATUSES = new Set(['Dead']);
 
 // ---------------------------------------------------------------------------
-// Vertical badge colors — each distinct so they're scannable at a glance.
-// Falls back to gray for any future vertical we don't know yet.
+// Vertical badge tints — muted, low-chroma tones drawn from the Atlas
+// teal→gold→maroon spectrum. They stay quiet (category tags) so the bright
+// reserved accents (orange/gold/maroon) keep their meaning. Unknown verticals
+// fall back to neutral slate.
 // ---------------------------------------------------------------------------
 export const VERTICAL_COLOR: Record<string, string> = {
-  Automotive: '#8b5cf6', // violet
-  Plumbing: '#3b82f6', // blue (water)
-  HVAC: '#06b6d4', // cyan (air)
-  Electrical: '#f5a524', // amber (current)
-  Renovation: '#f97316', // orange (build)
+  Automotive: '#b0875a', // bronze
+  Plumbing: '#6f97a8', // slate-blue (water)
+  HVAC: '#5aa394', // muted teal (air)
+  Electrical: '#d9a92e', // muted gold (current)
+  Renovation: '#bd6f48', // terracotta (build)
 };
 
 export function verticalColor(v: string): string {
-  return VERTICAL_COLOR[v] ?? '#7c8696';
+  return VERTICAL_COLOR[v] ?? '#8aa0a2';
 }
 
 // ---------------------------------------------------------------------------
-// Flag badge colors. DISQUALIFY/LOST = red, HOT-PAIN = green, others = amber.
+// Flag badge colors, on the Atlas palette:
+//   DISQUALIFY/LOST = maroon (negative), HOT-PAIN = gold (high-value emphasis),
+//   BIG/FRANCHISE/VERIFY = slate (neutral informational).
 // ---------------------------------------------------------------------------
 export function flagColor(flag: string): string {
-  if (flag === 'DISQUALIFY' || flag === 'LOST') return 'var(--red)';
-  if (flag === 'HOT-PAIN') return 'var(--green)';
-  return 'var(--amber)'; // BIG / FRANCHISE / VERIFY / anything else
+  if (flag === 'DISQUALIFY' || flag === 'LOST') return 'var(--maroon-ink)';
+  if (flag === 'HOT-PAIN') return 'var(--gold)';
+  return 'var(--dim)'; // BIG / FRANCHISE / VERIFY / anything else
 }
 
 // ---------------------------------------------------------------------------
