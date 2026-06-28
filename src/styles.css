@@ -380,9 +380,13 @@ button {
   margin-bottom: 10px;
 }
 .filters-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+.filters-row .select {
+  flex: 1 1 140px;
+  min-width: 140px;
 }
 .filters-foot {
   display: flex;
@@ -462,18 +466,22 @@ button {
 .row-main {
   display: flex;
   align-items: stretch;
-  gap: 6px;
-  padding: 10px 2px;
+  gap: 4px;
+  padding: 10px 0;
 }
 .row-expand {
   flex: none;
-  width: 26px;
+  width: 15px;
+  margin-left: -3px;
+  padding: 11px 0 0;
   border: none;
   background: transparent;
   color: var(--faint);
   cursor: pointer;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: stretch;
 }
 .chev {
   font-size: 20px;
@@ -619,11 +627,30 @@ button {
 
 /* ---- row edit ------------------------------------------------------------- */
 .row-edit {
-  padding: 2px 10px 14px 28px;
+  padding: 2px 2px 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   animation: fade 0.12s ease;
+}
+
+/* ---- pagination ----------------------------------------------------------- */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.pager .btn {
+  min-width: 86px;
+}
+.pager-info {
+  font-size: 13px;
+  color: var(--dim);
+  text-align: center;
 }
 @keyframes fade {
   from {

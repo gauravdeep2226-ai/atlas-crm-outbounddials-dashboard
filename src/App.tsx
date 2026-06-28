@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProspects } from './hooks/useProspects';
 import { DEAD_STATUSES } from './constants';
 import { defaultSort, isDueOrOverdue } from './utils';
@@ -7,11 +7,14 @@ import Filters, { EMPTY_FILTERS, type FilterState } from './components/Filters';
 import ProspectList from './components/ProspectList';
 
 const PRIORITY_ORDER = ['A', 'B', 'C'];
+const PAGE_SIZE = 12; // one page of outbound dials
 
 export default function App() {
   const { rows, count, loading, error, lastLoaded, saveStates, reload, save } = useProspects();
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const listTopRef = useRef<HTMLElement>(null);
 
   const verticals = useMemo(
     () => [...new Set(rows.map((r) => r.vertical).filter(Boolean))].sort(),
@@ -44,6 +47,22 @@ export default function App() {
       })
       .sort(defaultSort);
   }, [rows, filters]);
+
+  // Reset to the first page whenever the filtered set changes.
+  useEffect(() => {
+    setPage(0);
+  }, [filters]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pageRows = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const rangeStart = filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1;
+  const rangeEnd = safePage * PAGE_SIZE + pageRows.length;
+
+  const goPage = (p: number) => {
+    setPage(p);
+    listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const toggle = (id: string) => setExpandedId((cur) => (cur === id ? null : id));
 
@@ -108,7 +127,7 @@ export default function App() {
             </section>
           )}
 
-          <section className="card">
+          <section className="card" ref={listTopRef}>
             <div className="card-head">
               <h2>Call list</h2>
               {updated && <span className="muted small">updated {updated}</span>}
@@ -122,13 +141,30 @@ export default function App() {
               totalCount={rows.length}
             />
             <ProspectList
-              rows={filtered}
+              rows={pageRows}
               saveStates={saveStates}
               expandedId={expandedId}
               onToggle={toggle}
               onSave={save}
               emptyText="No businesses match these filters."
             />
+            {pageCount > 1 && (
+              <nav className="pager" aria-label="Call list pages">
+                <button className="btn btn-sm" disabled={safePage === 0} onClick={() => goPage(safePage - 1)}>
+                  ‹ Prev
+                </button>
+                <span className="pager-info tnum">
+                  {rangeStart}–{rangeEnd} of {filtered.length}
+                </span>
+                <button
+                  className="btn btn-sm"
+                  disabled={safePage >= pageCount - 1}
+                  onClick={() => goPage(safePage + 1)}
+                >
+                  Next ›
+                </button>
+              </nav>
+            )}
           </section>
 
           <footer className="foot muted small">
