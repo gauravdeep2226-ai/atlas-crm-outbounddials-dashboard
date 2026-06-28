@@ -527,19 +527,6 @@ button {
   color: var(--maroon-ink);
 }
 
-/* owner (read-only, near the business name) */
-.owner {
-  color: var(--dim);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 500;
-}
-.owner-ico {
-  color: var(--faint);
-  flex: none;
-}
-
 /* demo appointment chip on the collapsed row */
 .demo-chip {
   color: var(--accent);

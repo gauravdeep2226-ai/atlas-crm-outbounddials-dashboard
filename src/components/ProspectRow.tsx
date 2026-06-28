@@ -15,17 +15,6 @@ import {
 } from '../utils';
 import { FlagBadge, PriorityBadge, VerticalBadge } from './Badges';
 
-function PersonIcon() {
-  return (
-    <svg className="owner-ico" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 1.4c-3.1 0-5.2 1.6-5.2 3.3 0 .7.5 1.3 1.2 1.3h8c.7 0 1.2-.6 1.2-1.3 0-1.7-2.1-3.3-5.2-3.3Z"
-      />
-    </svg>
-  );
-}
-
 interface Props {
   p: Prospect;
   saveState: SaveState;
@@ -66,7 +55,6 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
   const overdue = isOverdue(p.next_date);
   const rating = num(p.rating);
   const reviews = num(p.review_count);
-  const owner = p.owner_name && p.owner_name !== 'Unknown' ? p.owner_name : '—';
 
   // Changing status to "Demo booked" reveals the demo date/time picker by
   // auto-expanding the row. Leaving a date-bearing status clears its now-stale
@@ -118,10 +106,6 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
             <FlagBadge flag={p.flag} />
           </div>
           <div className="row-meta">
-            <span className="meta owner" title="Owner">
-              <PersonIcon />
-              {owner}
-            </span>
             {rating > 0 && (
               <span className="meta tnum" title={`${reviews} reviews`}>
                 ★ {rating.toFixed(1)} <span className="muted">({reviews})</span>
