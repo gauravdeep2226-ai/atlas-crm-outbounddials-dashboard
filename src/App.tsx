@@ -58,7 +58,7 @@ export default function App() {
           <span className="brand-mark">A</span>
           <div className="brand-text">
             <h1>Call Engine</h1>
-            <span className="muted small">Atlas HQ · St. John&rsquo;s outbound</span>
+            <span className="muted small">The Atlas HQ · St. John&rsquo;s outbound</span>
           </div>
         </div>
         <div className="topbar-right">
@@ -132,7 +132,7 @@ export default function App() {
           </section>
 
           <footer className="foot muted small">
-            Atlas HQ Call Engine · data writes straight to the Google Sheet · {count} live prospects
+            The Atlas HQ Call Engine · data writes straight to the Google Sheet · {count} live prospects
           </footer>
         </main>
       )}

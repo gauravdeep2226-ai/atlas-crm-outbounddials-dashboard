@@ -1,4 +1,4 @@
-# Atlas HQ — Call Engine Dashboard
+# The Atlas HQ — Call Engine Dashboard
 
 A single-page outbound-dialing cockpit for cold-calling home-services trades in
 St. John's, NL. Reads a live prospect list from a Google Apps Script backend,

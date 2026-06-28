@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Atlas HQ — Call Engine Dashboard. Live outbound-dialing cockpit for St. John's home-services trades.",
+  "description": "The Atlas HQ — Call Engine Dashboard. Live outbound-dialing cockpit for St. John's home-services trades.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
