@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Prospect, SaveState, Writable } from '../types';
-import { DATE_STATUSES, DEAD_STATUSES, STATUS_COLOR, STATUS_OPTIONS } from '../constants';
+import { DEAD_STATUSES, STATUS_COLOR, STATUS_OPTIONS } from '../constants';
 import { dueLabel, formatDateTime, formatPhone, isOverdue, isDueOrOverdue, num, telHref, toDateTimeLocal } from '../utils';
 import { FlagBadge, PriorityBadge, VerticalBadge } from './Badges';
 
@@ -33,6 +33,7 @@ function SavePill({ state }: { state: SaveState }) {
 export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }: Props) {
   const [note, setNote] = useState(p.notes);
   const [nextDate, setNextDate] = useState(p.next_date);
+  const [demoDate, setDemoDate] = useState(p.demo_date);
   const [nextAction, setNextAction] = useState(p.next_action);
   const editing = useRef(false);
 
@@ -42,9 +43,10 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
     if (!editing.current) {
       setNote(p.notes);
       setNextDate(p.next_date);
+      setDemoDate(p.demo_date);
       setNextAction(p.next_action);
     }
-  }, [p.notes, p.next_date, p.next_action]);
+  }, [p.notes, p.next_date, p.demo_date, p.next_action]);
 
   const dead = DEAD_STATUSES.has(p.status);
   const isDemo = p.status === 'Demo booked';
@@ -55,11 +57,12 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
   const owner = p.owner_name && p.owner_name !== 'Unknown' ? p.owner_name : '—';
 
   // Changing status to "Demo booked" reveals the demo date/time picker by
-  // auto-expanding the row. Leaving a date-bearing status (Callback / Demo
-  // booked) clears next_date in the same write so stale dates don't linger.
+  // auto-expanding the row. Leaving a date-bearing status clears its now-stale
+  // date in the same write — callbacks live in next_date, demos in demo_date.
   const changeStatus = (v: string) => {
     const updates: Writable = { status: v };
-    if (DATE_STATUSES.has(p.status) && p.next_date) updates.next_date = '';
+    if (p.status === 'Callback' && p.next_date) updates.next_date = '';
+    if (p.status === 'Demo booked' && p.demo_date) updates.demo_date = '';
     onSave(p.place_id, updates);
     if (v === 'Demo booked' && !expanded) onToggle();
   };
@@ -77,6 +80,12 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
   const changeDate = (v: string) => {
     setNextDate(v);
     if (v !== p.next_date) onSave(p.place_id, { next_date: v });
+  };
+
+  // Demo bookings write to the dedicated demo_date column (not next_date).
+  const changeDemoDate = (v: string) => {
+    setDemoDate(v);
+    if (v !== p.demo_date) onSave(p.place_id, { demo_date: v });
   };
 
   return (
@@ -104,8 +113,8 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
               </span>
             )}
             {p.city && <span className="meta muted">{p.city}</span>}
-            {isDemo && p.next_date ? (
-              <span className="meta demo-chip">📅 Demo · {formatDateTime(p.next_date)}</span>
+            {isDemo && p.demo_date ? (
+              <span className="meta demo-chip">📅 Demo · {formatDateTime(p.demo_date)}</span>
             ) : p.next_date ? (
               <span className={'meta due' + (overdue ? ' due-over' : '')}>↻ {dueLabel(p.next_date)}</span>
             ) : null}
@@ -167,8 +176,8 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
               <input
                 className="input"
                 type="datetime-local"
-                value={toDateTimeLocal(nextDate)}
-                onChange={(e) => changeDate(e.target.value)}
+                value={toDateTimeLocal(demoDate)}
+                onChange={(e) => changeDemoDate(e.target.value)}
               />
             </label>
           ) : (

@@ -15,7 +15,8 @@ export interface Prospect {
   status: string; // defaults to "Not called"
   last_contact: string;
   next_action: string;
-  next_date: string; // ISO yyyy-mm-dd
+  next_date: string; // ISO yyyy-mm-dd — callback date for non-demo statuses
+  demo_date: string; // ISO datetime — set only when status is "Demo booked"
   notes: string;
   call_log: string;
 }
@@ -29,7 +30,7 @@ export interface GetResponse {
 
 // Only these fields are writable; the backend ignores anything else.
 export type Writable = Partial<
-  Pick<Prospect, 'status' | 'last_contact' | 'next_action' | 'next_date' | 'notes' | 'call_log'>
+  Pick<Prospect, 'status' | 'last_contact' | 'next_action' | 'next_date' | 'demo_date' | 'notes' | 'call_log'>
 >;
 
 export interface PostResponse {
