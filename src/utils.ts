@@ -138,6 +138,19 @@ export function dateTimeLocalToISO(wallClock: string, timeZone: string): string 
   return new Date(asUTC - offset).toISOString();
 }
 
+/** Friendly calendar date in `timeZone`, no time: "Jun 28, 2026". */
+export function formatZonedDate(value: string | null | undefined, timeZone: string): string {
+  if (!value) return '';
+  const str = String(value).trim();
+  if (!str) return '';
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(str);
+  // For a date-only value, anchor at noon UTC so the calendar date can't shift
+  // when rendered in a timezone. Instants are parsed as-is.
+  const d = new Date(hasZoneInfo(str) ? str : dateOnly ? `${str}T12:00:00Z` : str);
+  if (Number.isNaN(d.getTime())) return str;
+  return d.toLocaleString('en-CA', { timeZone, year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 /** Friendly chip label in `timeZone`: "Jun 29, 1:00 PM". */
 export function formatZonedDateTime(value: string | null | undefined, timeZone: string): string {
   if (!value) return '';

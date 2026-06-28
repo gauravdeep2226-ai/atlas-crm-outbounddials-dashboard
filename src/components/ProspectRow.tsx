@@ -5,6 +5,7 @@ import {
   dateTimeLocalToISO,
   dueLabel,
   formatPhone,
+  formatZonedDate,
   formatZonedDateTime,
   isOverdue,
   isDueOrOverdue,
@@ -60,7 +61,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
 
   const dead = DEAD_STATUSES.has(p.status);
   const isDemo = p.status === 'Demo booked';
-  const demoTz = timezoneForCity(p.city); // demo calendar runs in the prospect's timezone
+  const tz = timezoneForCity(p.city); // prospect's timezone — demo calendar + last-contact date
   const due = isDueOrOverdue(p.next_date);
   const overdue = isOverdue(p.next_date);
   const rating = num(p.rating);
@@ -97,7 +98,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
   // picker hands us an NDT wall-clock; store it as an absolute UTC instant so it
   // can't be reinterpreted by the sheet's timezone.
   const changeDemoDate = (wallClock: string) => {
-    const iso = dateTimeLocalToISO(wallClock, demoTz);
+    const iso = dateTimeLocalToISO(wallClock, tz);
     setDemoDate(iso);
     if (iso !== p.demo_date) onSave(p.place_id, { demo_date: iso });
   };
@@ -128,7 +129,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
             )}
             {p.city && <span className="meta muted">{p.city}</span>}
             {isDemo && p.demo_date ? (
-              <span className="meta demo-chip">📅 Demo · {formatZonedDateTime(p.demo_date, demoTz)}</span>
+              <span className="meta demo-chip">📅 Demo · {formatZonedDateTime(p.demo_date, tz)}</span>
             ) : p.next_date ? (
               <span className={'meta due' + (overdue ? ' due-over' : '')}>↻ {dueLabel(p.next_date)}</span>
             ) : null}
@@ -190,7 +191,7 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
               <input
                 className="input"
                 type="datetime-local"
-                value={zonedToDateTimeLocal(demoDate, demoTz)}
+                value={zonedToDateTimeLocal(demoDate, tz)}
                 onChange={(e) => changeDemoDate(e.target.value)}
               />
             </label>
@@ -205,7 +206,9 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
               />
             </label>
           )}
-          {p.last_contact && <div className="last-contact muted small">Last contact: {p.last_contact}</div>}
+          {p.last_contact && (
+            <div className="last-contact muted small">Last contact: {formatZonedDate(p.last_contact, tz)}</div>
+          )}
         </div>
       )}
     </li>
