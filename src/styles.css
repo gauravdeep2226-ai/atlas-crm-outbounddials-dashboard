@@ -705,6 +705,17 @@ button {
 .row-edit input[type='datetime-local'] {
   text-align: left;
   min-width: 0;
+  /* Date fields don't need the full row width — a compact, left-anchored box
+     reads as a picker instead of a long (often centred-on-iOS) empty bar. */
+  align-self: flex-start;
+}
+.row-edit input[type='date'] {
+  width: 200px;
+  max-width: 100%;
+}
+.row-edit input[type='datetime-local'] {
+  width: 260px;
+  max-width: 100%;
 }
 .row-edit input[type='date']::-webkit-date-and-time-value,
 .row-edit input[type='datetime-local']::-webkit-date-and-time-value {
