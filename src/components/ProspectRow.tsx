@@ -170,25 +170,39 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
             />
           </label>
           {isDemo ? (
-            <label className="field field-demo">
-              <span className="field-label field-label-demo">Demo date</span>
+            <div className="field field-demo">
+              <div className="field-label field-label-demo">
+                <span>Demo date</span>
+                {demoDate && (
+                  <button type="button" className="field-clear" onClick={() => changeDemoDate('')}>
+                    Clear
+                  </button>
+                )}
+              </div>
               <input
                 className="input"
                 type="datetime-local"
                 value={zonedToDateTimeLocal(demoDate, tz)}
                 onChange={(e) => changeDemoDate(e.target.value)}
               />
-            </label>
+            </div>
           ) : (
-            <label className="field">
-              <span className="field-label">Callback date {due && <em className="due-tag">due</em>}</span>
+            <div className="field">
+              <div className="field-label">
+                <span>Callback date {due && <em className="due-tag">due</em>}</span>
+                {nextDate && (
+                  <button type="button" className="field-clear" onClick={() => changeDate('')}>
+                    Clear
+                  </button>
+                )}
+              </div>
               <input
                 className="input"
                 type="date"
                 value={nextDate.slice(0, 10)}
                 onChange={(e) => changeDate(e.target.value)}
               />
-            </label>
+            </div>
           )}
           {p.last_contact && (
             <div className="last-contact muted small">Last contact: {formatZonedDate(p.last_contact, tz)}</div>
