@@ -68,19 +68,29 @@ function daysBetween(a: string, b: string): number {
  *  A full ISO instant (the backend serializes datetimes to UTC with a Z) is
  *  converted to local wall-clock so the picker matches the row chip. A naive
  *  "yyyy-mm-ddThh:mm" (our own optimistic write) is used as-is. */
-export function toDateTimeLocal(s: string): string {
+export function toDateTimeLocal(s: string | null | undefined): string {
   if (!s) return '';
-  if (s.includes('T')) {
-    const hasZone = /[zZ]$|[+-]\d\d:?\d\d$/.test(s);
-    if (hasZone) {
-      const d = new Date(s);
-      if (!Number.isNaN(d.getTime())) {
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-      }
-    }
-    return s.slice(0, 16);
+  const str = String(s).trim();
+  if (!str) return '';
+
+  const hasZone = /[zZ]|[+-]\d\d:?\d\d$/.test(str);
+
+  // Already a naive local datetime ("yyyy-mm-ddThh:mm[...]", no zone) — our own
+  // optimistic writes look like this. Use the wall-clock as-is, trimmed to minutes.
+  const naive = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(str);
+  if (naive && !hasZone) return `${naive[1]}T${naive[2]}`;
+
+  // Date-only — default the time to 9am local.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return `${str}T09:00`;
+
+  // Anything else (ISO with Z/offset, space-separated, a Date.toString()) —
+  // parse the instant and render it in the browser's local time so the picker
+  // matches the displayed chip. Only a truly unparseable value yields ''.
+  const d = new Date(str);
+  if (!Number.isNaN(d.getTime())) {
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   }
-  return s.slice(0, 10) + 'T09:00';
+  return '';
 }
 
 /** Friendly date (+ time if the stored value carries one): "Jul 2" / "Jul 2, 2:30 PM". */
