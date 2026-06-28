@@ -30,6 +30,11 @@ export const STATUS_COLOR: Record<string, string> = {
 // Statuses that pull a business out of the active queue.
 export const DEAD_STATUSES = new Set(['Dead']);
 
+// Statuses for which next_date is meaningful (a callback reminder or a demo
+// slot). Changing away from one of these clears next_date so stale dates don't
+// linger on the row.
+export const DATE_STATUSES = new Set(['Callback', 'Demo booked']);
+
 // ---------------------------------------------------------------------------
 // Vertical badge tints — muted, low-chroma tones drawn from the Atlas
 // teal→gold→maroon spectrum. They stay quiet (category tags) so the bright

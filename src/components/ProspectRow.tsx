@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Prospect, SaveState, Writable } from '../types';
-import { DEAD_STATUSES, STATUS_COLOR, STATUS_OPTIONS } from '../constants';
+import { DATE_STATUSES, DEAD_STATUSES, STATUS_COLOR, STATUS_OPTIONS } from '../constants';
 import { dueLabel, formatDateTime, formatPhone, isOverdue, isDueOrOverdue, num, telHref, toDateTimeLocal } from '../utils';
 import { FlagBadge, PriorityBadge, VerticalBadge } from './Badges';
 
@@ -55,9 +55,12 @@ export default function ProspectRow({ p, saveState, expanded, onToggle, onSave }
   const owner = p.owner_name && p.owner_name !== 'Unknown' ? p.owner_name : '—';
 
   // Changing status to "Demo booked" reveals the demo date/time picker by
-  // auto-expanding the row.
+  // auto-expanding the row. Leaving a date-bearing status (Callback / Demo
+  // booked) clears next_date in the same write so stale dates don't linger.
   const changeStatus = (v: string) => {
-    onSave(p.place_id, { status: v });
+    const updates: Writable = { status: v };
+    if (DATE_STATUSES.has(p.status) && p.next_date) updates.next_date = '';
+    onSave(p.place_id, updates);
     if (v === 'Demo booked' && !expanded) onToggle();
   };
 
