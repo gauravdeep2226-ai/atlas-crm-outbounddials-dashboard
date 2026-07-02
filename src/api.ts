@@ -1,4 +1,4 @@
-import type { GetResponse, PostResponse, Writable } from './types';
+import type { GetResponse, Prospect, PostResponse, Writable } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const TOKEN = import.meta.env.VITE_API_TOKEN;
@@ -42,7 +42,14 @@ export async function fetchProspects(signal?: AbortSignal): Promise<GetResponse>
   if (!data.ok) {
     throw new ApiError(data.error || 'Backend responded ok:false (check the token).');
   }
-  return data;
+  // Map API rows into typed prospects, defaulting the location fields (province,
+  // like city) so the filter layer never sees undefined.
+  const rows: Prospect[] = (data.rows ?? []).map((r) => ({
+    ...r,
+    city: r.city ?? '',
+    province: r.province ?? '',
+  }));
+  return { ...data, rows };
 }
 
 /**

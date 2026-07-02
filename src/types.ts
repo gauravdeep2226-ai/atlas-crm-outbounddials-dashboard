@@ -6,6 +6,7 @@ export interface Prospect {
   phone: string;
   vertical: string;
   city: string;
+  province: string; // e.g. "NL"
   place_id: string; // unique key — used for React keys AND writes
   rating: number | string;
   review_count: number | string;

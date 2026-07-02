@@ -1,6 +1,10 @@
+import { useMemo } from 'react';
+import type { Prospect } from '../types';
 import { STATUS_OPTIONS } from '../constants';
 
 export interface FilterState {
+  province: string;
+  city: string;
   vertical: string;
   priority: string;
   status: string;
@@ -9,6 +13,8 @@ export interface FilterState {
 }
 
 export const EMPTY_FILTERS: FilterState = {
+  province: '',
+  city: '',
   vertical: '',
   priority: '',
   status: '',
@@ -19,15 +25,45 @@ export const EMPTY_FILTERS: FilterState = {
 interface Props {
   filters: FilterState;
   setFilters: (f: FilterState) => void;
-  verticals: string[];
+  rows: Prospect[];
   priorities: string[];
   resultCount: number;
   totalCount: number;
 }
 
-export default function Filters({ filters, setFilters, verticals, priorities, resultCount, totalCount }: Props) {
+const uniqSorted = (values: string[]) => [...new Set(values.filter(Boolean))].sort();
+
+export default function Filters({ filters, setFilters, rows, priorities, resultCount, totalCount }: Props) {
+  // Cascading option lists, derived live from the rows (never hardcoded). Each
+  // level is scoped by the level(s) above it: Province → City → Vertical.
+  const provinces = useMemo(() => uniqSorted(rows.map((r) => r.province)), [rows]);
+
+  const cities = useMemo(() => {
+    const scope = filters.province ? rows.filter((r) => r.province === filters.province) : rows;
+    return uniqSorted(scope.map((r) => r.city));
+  }, [rows, filters.province]);
+
+  const verticals = useMemo(() => {
+    let scope = rows;
+    if (filters.province) scope = scope.filter((r) => r.province === filters.province);
+    if (filters.city) scope = scope.filter((r) => r.city === filters.city);
+    return uniqSorted(scope.map((r) => r.vertical));
+  }, [rows, filters.province, filters.city]);
+
   const set = (patch: Partial<FilterState>) => setFilters({ ...filters, ...patch });
-  const active = filters.vertical || filters.priority || filters.status || filters.search || !filters.hideDead;
+  // Changing a parent level resets its dependent children, so a stale, now-invalid
+  // selection can't silently hide the whole list.
+  const changeProvince = (province: string) => setFilters({ ...filters, province, city: '', vertical: '' });
+  const changeCity = (city: string) => setFilters({ ...filters, city, vertical: '' });
+
+  const active =
+    filters.province ||
+    filters.city ||
+    filters.vertical ||
+    filters.priority ||
+    filters.status ||
+    filters.search ||
+    !filters.hideDead;
 
   return (
     <div className="filters">
@@ -43,7 +79,40 @@ export default function Filters({ filters, setFilters, verticals, priorities, re
       </div>
 
       <div className="filters-row">
-        <select className="select" value={filters.vertical} onChange={(e) => set({ vertical: e.target.value })} aria-label="Filter by vertical">
+        <select
+          className="select"
+          value={filters.province}
+          onChange={(e) => changeProvince(e.target.value)}
+          aria-label="Filter by province"
+        >
+          <option value="">All provinces</option>
+          {provinces.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select"
+          value={filters.city}
+          onChange={(e) => changeCity(e.target.value)}
+          aria-label="Filter by city"
+        >
+          <option value="">All cities</option>
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="select"
+          value={filters.vertical}
+          onChange={(e) => set({ vertical: e.target.value })}
+          aria-label="Filter by vertical"
+        >
           <option value="">All verticals</option>
           {verticals.map((v) => (
             <option key={v} value={v}>
@@ -52,7 +121,12 @@ export default function Filters({ filters, setFilters, verticals, priorities, re
           ))}
         </select>
 
-        <select className="select" value={filters.priority} onChange={(e) => set({ priority: e.target.value })} aria-label="Filter by priority">
+        <select
+          className="select"
+          value={filters.priority}
+          onChange={(e) => set({ priority: e.target.value })}
+          aria-label="Filter by priority"
+        >
           <option value="">All priority</option>
           {priorities.map((p) => (
             <option key={p} value={p}>
@@ -61,7 +135,12 @@ export default function Filters({ filters, setFilters, verticals, priorities, re
           ))}
         </select>
 
-        <select className="select" value={filters.status} onChange={(e) => set({ status: e.target.value })} aria-label="Filter by status">
+        <select
+          className="select"
+          value={filters.status}
+          onChange={(e) => set({ status: e.target.value })}
+          aria-label="Filter by status"
+        >
           <option value="">All status</option>
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>

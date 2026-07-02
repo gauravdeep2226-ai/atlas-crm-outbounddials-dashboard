@@ -16,10 +16,6 @@ export default function App() {
   const [page, setPage] = useState(0);
   const listTopRef = useRef<HTMLElement>(null);
 
-  const verticals = useMemo(
-    () => [...new Set(rows.map((r) => r.vertical).filter(Boolean))].sort(),
-    [rows],
-  );
   const priorities = useMemo(() => {
     const present = new Set(rows.map((r) => r.priority).filter(Boolean));
     return PRIORITY_ORDER.filter((p) => present.has(p));
@@ -39,6 +35,8 @@ export default function App() {
     return rows
       .filter((r) => {
         if (filters.hideDead && DEAD_STATUSES.has(r.status)) return false;
+        if (filters.province && r.province !== filters.province) return false;
+        if (filters.city && r.city !== filters.city) return false;
         if (filters.vertical && r.vertical !== filters.vertical) return false;
         if (filters.priority && r.priority !== filters.priority) return false;
         if (filters.status && r.status !== filters.status) return false;
@@ -135,7 +133,7 @@ export default function App() {
             <Filters
               filters={filters}
               setFilters={setFilters}
-              verticals={verticals}
+              rows={rows}
               priorities={priorities}
               resultCount={filtered.length}
               totalCount={rows.length}
